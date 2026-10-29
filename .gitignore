@@ -1,0 +1,14 @@
+# Local development outputs and private device data
+build/
+.vscode/
+managed_components/
+sdkconfig.old
+.env
+.env.*
+!.env.example
+secrets/
+private/
+runtime-data/
+*.key
+*.pem
+*.p12
