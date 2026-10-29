@@ -12,3 +12,7 @@ runtime-data/
 *.key
 *.pem
 *.p12
+firmware/sdkconfig
+firmware/*.log
+tools/NotoSansSC.ttf
+__pycache__/

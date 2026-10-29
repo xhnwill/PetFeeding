@@ -1,0 +1,1 @@
+{"name":"mypat-companion","version":"0.2.0","private":true,"type":"module","scripts":{"test":"node --test ../tests/web.test.mjs"}}
