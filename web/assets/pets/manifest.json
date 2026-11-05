@@ -8,7 +8,30 @@
     "personality": "温柔，好奇，喜欢晒太阳",
     "width": 96,
     "height": 96,
-    "src": "./assets/pets/forest.png"
+    "src": "./assets/pets/forest.png",
+    "motions": {
+      "sleep": {
+        "src": "./assets/pets/forest-actions.png",
+        "row": 0,
+        "frames": 4,
+        "frameMs": 700,
+        "preview": "./assets/pets/forest-sleep.gif"
+      },
+      "eat": {
+        "src": "./assets/pets/forest-actions.png",
+        "row": 1,
+        "frames": 4,
+        "frameMs": 220,
+        "preview": "./assets/pets/forest-eat.gif"
+      },
+      "play": {
+        "src": "./assets/pets/forest-actions.png",
+        "row": 2,
+        "frames": 4,
+        "frameMs": 180,
+        "preview": "./assets/pets/forest-play.gif"
+      }
+    }
   },
   {
     "id": "nebula",
@@ -19,7 +42,30 @@
     "personality": "慢悠悠，爱做梦，喜欢看星星",
     "width": 96,
     "height": 96,
-    "src": "./assets/pets/nebula.png"
+    "src": "./assets/pets/nebula.png",
+    "motions": {
+      "sleep": {
+        "src": "./assets/pets/nebula-actions.png",
+        "row": 0,
+        "frames": 4,
+        "frameMs": 700,
+        "preview": "./assets/pets/nebula-sleep.gif"
+      },
+      "eat": {
+        "src": "./assets/pets/nebula-actions.png",
+        "row": 1,
+        "frames": 4,
+        "frameMs": 220,
+        "preview": "./assets/pets/nebula-eat.gif"
+      },
+      "play": {
+        "src": "./assets/pets/nebula-actions.png",
+        "row": 2,
+        "frames": 4,
+        "frameMs": 180,
+        "preview": "./assets/pets/nebula-play.gif"
+      }
+    }
   },
   {
     "id": "sunshine",
@@ -30,6 +76,29 @@
     "personality": "开朗，勇敢，喜欢玩球",
     "width": 96,
     "height": 96,
-    "src": "./assets/pets/sunshine.png"
+    "src": "./assets/pets/sunshine.png",
+    "motions": {
+      "sleep": {
+        "src": "./assets/pets/sunshine-actions.png",
+        "row": 0,
+        "frames": 4,
+        "frameMs": 700,
+        "preview": "./assets/pets/sunshine-sleep.gif"
+      },
+      "eat": {
+        "src": "./assets/pets/sunshine-actions.png",
+        "row": 1,
+        "frames": 4,
+        "frameMs": 220,
+        "preview": "./assets/pets/sunshine-eat.gif"
+      },
+      "play": {
+        "src": "./assets/pets/sunshine-actions.png",
+        "row": 2,
+        "frames": 4,
+        "frameMs": 180,
+        "preview": "./assets/pets/sunshine-play.gif"
+      }
+    }
   }
 ]

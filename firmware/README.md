@@ -1,6 +1,6 @@
 # ESP32-C3固件
 
-版本v0.3.0，构建日期2026-11-05。使用ESP-IDF 5.5.4；[构建、引脚和联调说明](../docs/implementation-v0.2.0.md)。
+版本v0.4.0，构建日期2026-11-05。使用ESP-IDF 5.5.4；[构建、引脚和联调说明](../docs/implementation-v0.2.0.md)。
 
 - main/：应用、硬件、宠物核心、BLE及网络代码，详细职责见目录说明。
 - CMakeLists.txt：ESP-IDF工程入口。

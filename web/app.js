@@ -1,10 +1,11 @@
+import {createAnimation,triggerAnimation,selectAnimation,animationFrame,loadPetArt,drawPetFrame,PET_ACTIONS} from './pet-animation.js';
 export const DAY=86400;
 export const service='4d500000-633a-4640-91f2-73d12144a010';
 export const stateUUID='4d500001-633a-4640-91f2-73d12144a010';
 export const commandUUID='4d500002-633a-4640-91f2-73d12144a010';
 export function createPet(now=Date.now()/1000){
  const seed=new Uint32Array(4);crypto.getRandomValues(seed);
- return {version:'0.3.0',id:[...seed].map(x=>x.toString(16).padStart(8,'0')).join(''),species:seed[2]%3,color:seed[3]%4,stage:0,days:0,growth:0,hunger:80,mood:80,energy:80,clean:100,bond:0,poop:0,meals:0,gifts:0,sleeping:false,clockValid:true,born:Math.floor(now),last:Math.floor(now),window:0,sleepSeconds:0,stageAt:Math.floor(now)};
+ return {version:'0.4.0',id:[...seed].map(x=>x.toString(16).padStart(8,'0')).join(''),species:seed[2]%3,color:seed[3]%4,stage:0,days:0,growth:0,hunger:80,mood:80,energy:80,clean:100,bond:0,poop:0,meals:0,gifts:0,sleeping:false,clockValid:true,born:Math.floor(now),last:Math.floor(now),window:0,sleepSeconds:0,stageAt:Math.floor(now)};
 }
 export function tick(p,now){
  now=Math.floor(now);if(now<=p.last)return p;
@@ -36,20 +37,28 @@ export function act(p,action){
 if(typeof document!=='undefined')start();
 function start(){
  const $=id=>document.getElementById(id);let mode='demo',device,readChr,writeChr,token='',pet,busy=false;
- try{pet=JSON.parse(localStorage.getItem('mypat-demo-v2'));if(!pet||!Number.isFinite(pet.last)||!['0.2.0','0.3.0'].includes(pet.version))pet=null;}catch{}
+ try{pet=JSON.parse(localStorage.getItem('mypat-demo-v2'));if(!pet||!Number.isFinite(pet.last)||!['0.2.0','0.3.0','0.4.0'].includes(pet.version))pet=null;}catch{}
  pet??=createPet();let demo=pet;
  const feedback=s=>$('feedback').textContent=s;
  const species=['森林小兽','星云小兽','阳光小兽'],names=['芽芽','团团','小麦'];
- const art=['forest','nebula','sunshine'].map(slug=>{const im=new Image();im.src='./assets/pets/'+slug+'.png';return im;});
+ const art=loadPetArt(), animation=createAnimation();
+ function animateAccepted(action){
+  const motion=action==='feed'?'eat':action==='play'?'play':(action==='sleep'||action==='wake')?'idle':null;
+  if(motion)triggerAnimation(animation,motion,performance.now());
+ }
  function draw(p,frame=Date.now()/500){
   const c=$('petCanvas').getContext('2d');c.clearRect(0,0,480,380);c.imageSmoothingEnabled=false;
   c.fillStyle='#c5d3b6';c.beginPath();c.ellipse(240,320,100,12,0,0,Math.PI*2);c.fill();
-  const im=art[p.species%3],size=248+p.stage*12,bob=p.sleeping?0:Math.sin(frame)*3;
-  if(im.complete&&im.naturalWidth)c.drawImage(im,240-size/2,320-size+bob,size,size);
+  const now=performance.now(), playing=$('game').open;
+  let motion=selectAnimation(animation,p.sleeping,playing,now);
+  if(mode!=='demo'&&PET_ACTIONS.includes(p.motion)&&!playing)motion=p.sleeping?'sleep':p.motion;
+  if($('petCanvas').dataset.motion!==motion){$('petCanvas').dataset.motion=motion;$('petCanvas').setAttribute('aria-label',names[p.species]+'正在'+({idle:'待机',sleep:'睡觉',eat:'吃饭',play:'玩耍'}[motion]));}
+  const index=animationFrame(animation,motion,now),size=248+p.stage*12,bob=motion==='idle'?Math.sin(frame)*3:0;
+  if(drawPetFrame(c,art,p.species%3,motion,index,240-size/2,320-size+bob,size)){}
   else{c.fillStyle='#6f8866';c.font='16px sans-serif';c.fillText('小伙伴正在赶来…',165,220);}
   c.fillStyle=['#89b79e','#e8ab91','#b7a2d1','#e2bf72'][p.color%4];c.beginPath();c.arc(380,305,6,0,Math.PI*2);c.fill();
   if(p.sleeping){c.font='24px serif';c.fillStyle='#6f8866';c.fillText('z Z',360,125);}
-  if(p.gifts&&art[p.friendSpecies%3]?.complete)c.drawImage(art[p.friendSpecies%3],350,220,88,88);
+  if(p.gifts)drawPetFrame(c,art,p.friendSpecies%3,'idle',0,350,220,88);
   c.font='25px sans-serif';for(let i=0;i<p.poop;i++)c.fillText('💩',365+i*25,345);
  }
  function render(){
@@ -78,7 +87,7 @@ function start(){
   if(busy)throw Error('上一项操作正在完成，请稍等');busy=true;
   try{
    while(polling)await new Promise(r=>setTimeout(r,30));
-   if(mode==='demo'){tick(demo,Date.now()/1000);act(demo,action);localStorage.setItem('mypat-demo-v2',JSON.stringify(demo));pet=demo;render();return;}
+   if(mode==='demo'){tick(demo,Date.now()/1000);act(demo,action);animateAccepted(action);localStorage.setItem('mypat-demo-v2',JSON.stringify(demo));pet=demo;render();return;}
    const request=crypto.randomUUID(),json=JSON.stringify({action,request,...extra})+'\n';
    if(new TextEncoder().encode(json).length>510)throw Error('配置内容过长');
    if(mode==='ble'){
@@ -88,7 +97,7 @@ function start(){
     const r=await fetch('/api/command',{method:'POST',headers:{'X-MyPat-Token':token,'Content-Type':'application/json'},body:json});
     if(!r.ok)throw Error('设备暂时无法接受操作');
    }
-   for(let i=0;i<25;i++){await new Promise(r=>setTimeout(r,200));pet=await read();if(pet.ack===request){render();if(pet.error)throw Error(pet.error==='action_rejected'?'设备未接受此操作，请检查状态':pet.error);return;}}
+   for(let i=0;i<25;i++){await new Promise(r=>setTimeout(r,200));pet=await read();if(pet.ack===request){if(pet.error){render();throw Error(pet.error==='action_rejected'?'设备未接受此操作，请检查状态':pet.error);}animateAccepted(action);render();return;}}
    throw Error('尚未收到确认，请读取设备状态后再操作');
   }finally{busy=false;}
  }
@@ -122,16 +131,17 @@ function start(){
   if(url.protocol!=='https:')throw Error('仅支持HTTPS应用固件');
   await send('ota',{url:url.href});feedback('设备已开始下载，成功后重启。请保持供电。');
  })();};
- let target=0,round=0,showing=false;
+ let target=0,round=0,showing=false,gameTimer;
  function nextRound(){
+  clearTimeout(gameTimer);
   target=crypto.getRandomValues(new Uint8Array(1))[0]%3;showing=true;
   $('gameMessage').textContent='记住这颗星星…';
   [...$('stars').children].forEach((b,i)=>b.classList.toggle('lit',i===target));
-  setTimeout(()=>{if(!$('game').open)return;[...$('stars').children].forEach(b=>b.classList.remove('lit'));showing=false;$('gameMessage').textContent='刚才是哪一颗？';},1000);
+  gameTimer=setTimeout(()=>{if(!$('game').open)return;[...$('stars').children].forEach(b=>b.classList.remove('lit'));showing=false;$('gameMessage').textContent='刚才是哪一颗？';},1000);
  }
  for(let i=0;i<3;i++){const b=document.createElement('button');b.textContent='★';b.setAttribute('aria-label','第'+(i+1)+'颗星星');
  b.onclick=run(async()=>{if(showing)return;if(i!==target){$('gameMessage').textContent='再试试，没有关系。';return;}if(++round===3){$('game').close();await send('play');feedback('找到了所有星星，小伙伴很开心！');}else nextRound();});$('stars').append(b);}
- $('play').onclick=()=>{round=0;$('game').showModal();nextRound();};$('closeGame').onclick=()=>$('game').close();
+ $('play').onclick=run(async()=>{if(pet.energy<10)throw Error('有点累了，先睡一会吧');if(pet.sleeping)await send('wake');triggerAnimation(animation,'play',performance.now());round=0;$('game').showModal();nextRound();});$('closeGame').onclick=()=>{clearTimeout(gameTimer);$('game').close();triggerAnimation(animation,'idle',performance.now());};$('game').addEventListener('cancel',()=>{clearTimeout(gameTimer);triggerAnimation(animation,'idle',performance.now());});
  let polling=false;setInterval(async()=>{if(polling||busy)return;polling=true;try{pet=await read();render();}catch(e){if(mode!=='demo')feedback('读取失败：'+e.message);}finally{polling=false;}},2000);
  render();function animate(){draw(pet);requestAnimationFrame(animate);}requestAnimationFrame(animate);
 }

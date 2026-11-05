@@ -7,3 +7,5 @@
 - network.c：Wi-Fi、SNTP、内嵌HTTP网页与HTTPS应用OTA。
 - font.h：由tools/generate_font.py生成的Noto Sans SC位图子集，许可见tools/FONT-LICENSE.txt。
 - pet_art.h：由tools/build_pet_assets.py生成的三只96×96幼体索引像素与调色板，原稿在assets/pets/source。
+- pet_motion.h：生成的36帧4位索引动作与共用调色板。
+- pet_animation.c与pet_animation.h：不依赖ESP-IDF的临时动作调度，不进入存档。

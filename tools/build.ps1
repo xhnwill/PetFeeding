@@ -14,6 +14,6 @@ Push-Location (Join-Path $PSScriptRoot '..\firmware')
 try {
  & $taskPython (Join-Path $IdfPath 'tools\idf.py') build
  if($LASTEXITCODE){throw "Build failed"}
- & $taskPython (Join-Path $IdfPath 'tools\idf.py') merge-bin -o mypat-v0.3.0-full.bin
+ & $taskPython (Join-Path $IdfPath 'tools\idf.py') merge-bin -o mypat-v0.4.0-full.bin
  if($LASTEXITCODE){throw "Merge failed"}
 } finally {Pop-Location}

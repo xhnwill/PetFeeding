@@ -3,7 +3,8 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "pet.h"
-#define APP_VERSION "0.3.0"
+#include "pet_animation.h"
+#define APP_VERSION "0.4.0"
 #define APP_BUILD_DATE "2026-11-05"
 typedef struct {
   char json[512];
@@ -12,6 +13,8 @@ typedef struct {
 extern QueueHandle_t commands;
 extern SemaphoreHandle_t state_lock;
 extern pet_t pet;
+extern pet_anim_t pet_animation;
+extern bool pet_game_active;
 extern char parent_token[17], status_text[96], ack_id[40], ack_error[96],
     device_ip[24];
 extern bool clock_valid;

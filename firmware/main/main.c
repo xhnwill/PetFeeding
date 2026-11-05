@@ -14,6 +14,8 @@
 QueueHandle_t commands;
 SemaphoreHandle_t state_lock;
 pet_t pet;
+pet_anim_t pet_animation;
+bool pet_game_active;
 char parent_token[17], status_text[96], ack_id[40], ack_error[96],
     device_ip[24];
 bool clock_valid;
@@ -80,6 +82,9 @@ bool app_queue(const char *json, bool parent) {
 void app_state(char *out, size_t len, bool privileged) {
   xSemaphoreTake(state_lock, portMAX_DELAY);
   int64_t now = pet.last;
+  pet_anim_action_t motion =
+      pet_anim_select(&pet_animation, pet.sleeping, pet_game_active,
+                      (uint32_t)(esp_timer_get_time() / 1000));
   snprintf(out, len,
            "{\"version\":\"%s\",\"build\":\"%s\",\"id\":\"%08lx%08lx\","
            "\"species\":%lu,\"color\":%lu,\"stage\":%d,\"days\":%lld,"
@@ -87,7 +92,7 @@ void app_state(char *out, size_t len, bool privileged) {
            "\"clean\":%ld,\"bond\":%ld,\"poop\":%ld,\"gifts\":%ld,\"sleeping\":"
            "%s,\"clockValid\":%s,\"ip\":\"%s\",\"pairing\":%u,\"friendFound\":%"
            "s,\"ack\":\"%s\",\"error\":\"%s\",\"token\":\"%s\","
-           "\"friendSpecies\":%lu,\"friendColor\":%lu}",
+           "\"friendSpecies\":%lu,\"friendColor\":%lu,\"motion\":\"%s\"}",
            APP_VERSION, APP_BUILD_DATE, (unsigned long)pet.genes[0],
            (unsigned long)pet.genes[1], (unsigned long)(pet.genes[2] % 3),
            (unsigned long)(pet.genes[3] % 4), (int)pet.stage,
@@ -98,12 +103,28 @@ void app_state(char *out, size_t len, bool privileged) {
            clock_valid ? "true" : "false", device_ip, pairing_number,
            friend_found ? "true" : "false", ack_id, ack_error,
            privileged ? parent_token : "", (unsigned long)pet.friend_species,
-           (unsigned long)pet.friend_color);
+           (unsigned long)pet.friend_color, pet_anim_name(motion));
   xSemaphoreGive(state_lock);
 }
 static const char *str(cJSON *j, const char *key) {
   cJSON *v = cJSON_GetObjectItemCaseSensitive(j, key);
   return cJSON_IsString(v) ? v->valuestring : "";
+}
+static bool do_action(const char *action, int64_t now) {
+  bool ok = pet_action(&pet, action, now);
+  if (ok) {
+    if (!strcmp(action, "feed") || !strcmp(action, "sleep") ||
+        !strcmp(action, "wake"))
+      pet_game_active = false;
+    pet_anim_action_t motion = !strcmp(action, "feed")   ? PET_ANIM_EAT
+                               : !strcmp(action, "play") ? PET_ANIM_PLAY
+                                                         : PET_ANIM_IDLE;
+    if (motion != PET_ANIM_IDLE || !strcmp(action, "sleep") ||
+        !strcmp(action, "wake"))
+      pet_anim_trigger(&pet_animation, motion,
+                       (uint32_t)(esp_timer_get_time() / 1000));
+  }
+  return ok;
 }
 static void command(command_t *c) {
   cJSON *j = cJSON_Parse(c->json);
@@ -177,7 +198,7 @@ static void command(command_t *c) {
         ok = true;
       }
     } else
-      ok = pet_action(&pet, a, now);
+      ok = do_action(a, now);
   }
   if (!ok && !ack_error[0])
     strcpy(ack_error, "action_rejected");
@@ -245,7 +266,7 @@ void app_main(void) {
     esp_ota_mark_app_valid_cancel_rollback();
   int phase = 0;
   bool parent_page = false;
-  int game = 0, ball = 0, score = 0;
+  int ball = 0, score = 0;
   int64_t game_start = 0;
   while (1) {
     xSemaphoreTake(state_lock, portMAX_DELAY);
@@ -264,7 +285,7 @@ void app_main(void) {
         radio_confirm(true);
       if (key == 1)
         radio_confirm(false);
-    } else if (game) {
+    } else if (pet_game_active) {
       if (key == 2)
         ball--;
       if (key == 4)
@@ -278,8 +299,8 @@ void app_main(void) {
       snprintf(status_text, sizeof(status_text), "星%d 篮%d 分%d",
                (phase / 50) % 5 + 1, ball + 1, score);
       if (key == 1 || esp_timer_get_time() - game_start > 30000000) {
-        game = 0;
-        pet_action(&pet, "play", now);
+        pet_game_active = false;
+        do_action("play", now);
         save();
       }
     } else if (key == 7) {
@@ -309,21 +330,27 @@ void app_main(void) {
         }
         strcpy(status_text, "请朋友也打开寻找");
       } else if (selected == 1) {
-        game = 1;
-        score = 0;
-        ball = 2;
-        game_start = esp_timer_get_time();
+        if (pet.energy >= 10) {
+          do_action("wake", now);
+          save();
+          pet_game_active = true;
+          pet_anim_trigger(&pet_animation, PET_ANIM_PLAY,
+                           (uint32_t)(esp_timer_get_time() / 1000));
+          score = 0;
+          ball = 2;
+          game_start = esp_timer_get_time();
+        } else
+          strcpy(status_text, "现在不需要哦");
       } else {
-        bool ok = pet_action(
-            &pet, selected == 3 && pet.sleeping ? "wake" : actions[selected],
-            now);
+        bool ok = do_action(
+            selected == 3 && pet.sleeping ? "wake" : actions[selected], now);
         strcpy(status_text, ok ? "收到啦，谢谢你" : "现在不需要哦");
         save();
       }
     }
     radio_poll();
     if (esp_timer_get_time() - activity > 300000000LL && !pet.sleeping) {
-      pet_action(&pet, "sleep", now);
+      do_action("sleep", now);
       save();
     }
     if (esp_timer_get_time() - last_save > 300000000LL)

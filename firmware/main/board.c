@@ -3,8 +3,10 @@
 #include "driver/spi_master.h"
 #include "esp_adc/adc_oneshot.h"
 #include "esp_sleep.h"
+#include "esp_timer.h"
 #include "font.h"
 #include "pet_art.h"
+#include "pet_motion.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -163,21 +165,35 @@ static void text(int x, int y, const char *s, uint16_t color) {
     x += c < 128 ? 9 : 16;
   }
 }
-static void sprite(unsigned species,int x,int y,int size) {
-  const uint8_t *data=pet_art_pixels[species%3];
-  const uint16_t *palette=pet_art_palettes[species%3];
-  int top=y>strip_y?y:strip_y, bottom=y+size<strip_y+20?y+size:strip_y+20;
-  for(int row=top;row<bottom;row++) {
-    int sy=(row-y)*PET_ART_SIZE/size;
-    for(int col=0;col<size;col++) {
-      unsigned index=data[sy*PET_ART_SIZE+col*PET_ART_SIZE/size];
-      if(index)rect(x+col,row,1,1,palette[index]);
+static void sprite(unsigned species, int x, int y, int size,
+                   pet_anim_action_t action, unsigned frame) {
+  bool packed = action != PET_ANIM_IDLE;
+  const uint8_t *data =
+      packed ? pet_motion_pixels[species % 3][action - 1][frame % 4]
+             : pet_art_pixels[species % 3];
+  const uint16_t *palette = packed
+                                ? pet_motion_palettes[species % 3][action - 1]
+                                : pet_art_palettes[species % 3];
+  int top = y > strip_y ? y : strip_y,
+      bottom = y + size < strip_y + 20 ? y + size : strip_y + 20;
+  for (int row = top; row < bottom; row++) {
+    int sy = (row - y) * PET_ART_SIZE / size;
+    for (int col = 0; col < size; col++) {
+      unsigned pixel = sy * PET_ART_SIZE + col * PET_ART_SIZE / size;
+      unsigned index = packed ? ((data[pixel / 2] >> (pixel % 2 ? 0 : 4)) & 15)
+                              : data[pixel];
+      if (index)
+        rect(x + col, row, 1, 1, palette[index]);
     }
   }
 }
 void board_render(int selection, int phase, const char *note,
                   const char *detail) {
   uint16_t ink = rgb(44, 60, 66), white = rgb(255, 255, 255);
+  uint32_t now = (uint32_t)(esp_timer_get_time() / 1000);
+  pet_anim_action_t action =
+      pet_anim_select(&pet_animation, pet.sleeping, pet_game_active, now);
+  unsigned frame = pet_anim_frame(&pet_animation, action, now);
   for (strip_y = 0; strip_y < H; strip_y += 20) {
     rect(0, strip_y, W, 20, rgb(249, 245, 235));
     text(12, 10, "我的小伙伴", ink);
@@ -186,14 +202,19 @@ void board_render(int selection, int phase, const char *note,
              (long long)((pet.last - pet.born) / PET_DAY));
     text(12, 32, info, ink);
     ellipse(120, 177, 60, 9, rgb(216, 223, 208));
-    const int colors[4][3]={{139,181,163},{228,162,137},{167,159,205},{222,190,110}};
-    const int *col=colors[pet.genes[3]%4];
-    uint16_t body=rgb(col[0],col[1],col[2]);
-    int bob=pet.sleeping?0:(phase%8<4?0:3), size=96+pet.stage*6;
-    sprite(pet.genes[2]%3,120-size/2,174-size+bob,size);
-    ellipse(215,39,4,4,body);
-    if(pet.gifts)sprite(pet.friend_species%3,172,132,44);
-    if(pet.sleeping)text(170,78,"Zzz",ink);
+    const int colors[4][3] = {
+        {139, 181, 163}, {228, 162, 137}, {167, 159, 205}, {222, 190, 110}};
+    const int *col = colors[pet.genes[3] % 4];
+    uint16_t body = rgb(col[0], col[1], col[2]);
+    int bob = action == PET_ANIM_IDLE ? (phase % 8 < 4 ? 0 : 3) : 0,
+        size = 96 + pet.stage * 6;
+    sprite(pet.genes[2] % 3, 120 - size / 2, 174 - size + bob, size, action,
+           frame);
+    ellipse(215, 39, 4, 4, body);
+    if (pet.gifts)
+      sprite(pet.friend_species % 3, 172, 132, 44, PET_ANIM_IDLE, 0);
+    if (pet.sleeping)
+      text(170, 78, "Zzz", ink);
     for (int i = 0; i < pet.poop; i++)
       ellipse(185 + i * 12, 178, 5, 5, rgb(140, 101, 70));
     int vals[] = {pet.hunger, pet.mood, pet.energy};
