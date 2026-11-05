@@ -4,7 +4,7 @@ export const stateUUID='4d500001-633a-4640-91f2-73d12144a010';
 export const commandUUID='4d500002-633a-4640-91f2-73d12144a010';
 export function createPet(now=Date.now()/1000){
  const seed=new Uint32Array(4);crypto.getRandomValues(seed);
- return {version:'0.2.0',id:[...seed].map(x=>x.toString(16).padStart(8,'0')).join(''),species:seed[2]%3,color:seed[3]%4,stage:0,days:0,growth:0,hunger:80,mood:80,energy:80,clean:100,bond:0,poop:0,meals:0,gifts:0,sleeping:false,clockValid:true,born:Math.floor(now),last:Math.floor(now),window:0,sleepSeconds:0,stageAt:Math.floor(now)};
+ return {version:'0.3.0',id:[...seed].map(x=>x.toString(16).padStart(8,'0')).join(''),species:seed[2]%3,color:seed[3]%4,stage:0,days:0,growth:0,hunger:80,mood:80,energy:80,clean:100,bond:0,poop:0,meals:0,gifts:0,sleeping:false,clockValid:true,born:Math.floor(now),last:Math.floor(now),window:0,sleepSeconds:0,stageAt:Math.floor(now)};
 }
 export function tick(p,now){
  now=Math.floor(now);if(now<=p.last)return p;
@@ -36,24 +36,21 @@ export function act(p,action){
 if(typeof document!=='undefined')start();
 function start(){
  const $=id=>document.getElementById(id);let mode='demo',device,readChr,writeChr,token='',pet,busy=false;
- try{pet=JSON.parse(localStorage.getItem('mypat-demo-v2'));if(!pet||!Number.isFinite(pet.last)||pet.version!=='0.2.0')pet=null;}catch{}
+ try{pet=JSON.parse(localStorage.getItem('mypat-demo-v2'));if(!pet||!Number.isFinite(pet.last)||!['0.2.0','0.3.0'].includes(pet.version))pet=null;}catch{}
  pet??=createPet();let demo=pet;
  const feedback=s=>$('feedback').textContent=s;
  const species=['森林小兽','星云小兽','阳光小兽'],names=['芽芽','团团','小麦'];
+ const art=['forest','nebula','sunshine'].map(slug=>{const im=new Image();im.src='./assets/pets/'+slug+'.png';return im;});
  function draw(p,frame=Date.now()/500){
-  const c=$('petCanvas').getContext('2d'),w=480,h=380;c.clearRect(0,0,w,h);
-  const palettes=['#89b79e','#e8ab91','#b7a2d1','#e2bf72'],body=palettes[p.color%4];
-  const ellipse=(x,y,rx,ry,col)=>{c.fillStyle=col;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();};
-  const bounce=p.sleeping?0:Math.sin(frame)*4,y=205+bounce,r=65+p.stage*6;
-  ellipse(240,307,105,13,'#c5d3b6');
-  ellipse(240-r+15,y-66,24,p.species===0?55:32,body);ellipse(240+r-15,y-66,24,p.species===0?55:32,body);
-  ellipse(240,y,r,87,body);ellipse(240,y+26,42,48,'#f7e9cc');
-  ellipse(240-r+7,y+69,27,14,body);ellipse(240+r-7,y+69,27,14,body);
-  if(p.sleeping){c.strokeStyle='#32463b';c.lineWidth=5;for(const x of [213,267]){c.beginPath();c.arc(x,y-10,10,0,Math.PI);c.stroke();}c.font='24px serif';c.fillStyle='#6f8866';c.fillText('z Z',350,120);}
-  else{ellipse(213,y-10,7,10,'#32463b');ellipse(267,y-10,7,10,'#32463b');ellipse(215,y-13,2,3,'#fff');ellipse(269,y-13,2,3,'#fff');}
-  ellipse(196,y+7,10,5,'#db967d');ellipse(284,y+7,10,5,'#db967d');
-  c.strokeStyle='#536651';c.lineWidth=3;c.beginPath();c.arc(240,y+7,7,0,Math.PI);c.stroke();
-  c.font='25px sans-serif';for(let i=0;i<p.poop;i++)c.fillText('💩',360+i*25,300);
+  const c=$('petCanvas').getContext('2d');c.clearRect(0,0,480,380);c.imageSmoothingEnabled=false;
+  c.fillStyle='#c5d3b6';c.beginPath();c.ellipse(240,320,100,12,0,0,Math.PI*2);c.fill();
+  const im=art[p.species%3],size=248+p.stage*12,bob=p.sleeping?0:Math.sin(frame)*3;
+  if(im.complete&&im.naturalWidth)c.drawImage(im,240-size/2,320-size+bob,size,size);
+  else{c.fillStyle='#6f8866';c.font='16px sans-serif';c.fillText('小伙伴正在赶来…',165,220);}
+  c.fillStyle=['#89b79e','#e8ab91','#b7a2d1','#e2bf72'][p.color%4];c.beginPath();c.arc(380,305,6,0,Math.PI*2);c.fill();
+  if(p.sleeping){c.font='24px serif';c.fillStyle='#6f8866';c.fillText('z Z',360,125);}
+  if(p.gifts&&art[p.friendSpecies%3]?.complete)c.drawImage(art[p.friendSpecies%3],350,220,88,88);
+  c.font='25px sans-serif';for(let i=0;i<p.poop;i++)c.fillText('💩',365+i*25,345);
  }
  function render(){
   $('species').textContent=species[pet.species];$('petName').textContent='你好，我是'+names[pet.species];

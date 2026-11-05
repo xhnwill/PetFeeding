@@ -2,6 +2,7 @@
 
 - pet_test.c：实际固件C核心在主机运行的断言回归。
 - web.test.mjs：Node内置测试，验证网页规则与无设备操作边界。
+- pet_art_test.py：运行python tests/pet_art_test.py核对透明度、色数、轮廓与网页/设备RGB565像素一致性。
 
 仓库根目录运行node --test tests/web.test.mjs。Linux或WSL运行：
 

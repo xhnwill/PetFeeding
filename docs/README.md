@@ -1,7 +1,8 @@
 # 文档目录
 
-当前实现：v0.2.0，2026-10-29；设计基线v0.1.0。
+当前实现：v0.3.0，2026-11-05；设计基线v0.1.0。
 
+- [pet-art-v0.3.0.md](pet-art-v0.3.0.md)：三只幼体基础形象、资源编译和验证。
 - design/：可行性、玩法与工程设计；当前入口为[可行性设计](design/feasibility-v0.1.0.md)。
 - [implementation-v0.2.0.md](implementation-v0.2.0.md)：硬件适配、烧录、网页连接、BLE/HTTP协议与验收边界。
 - web-preview.png：浏览器验证时保存的网页预览，截图仅含演示宠物数据。

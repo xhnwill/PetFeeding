@@ -1,0 +1,35 @@
+[
+  {
+    "id": "forest",
+    "species": 0,
+    "name": "芽芽",
+    "title": "森林小兽",
+    "silhouette": "叶片耳朵、头顶嫩芽、叶尾",
+    "personality": "温柔，好奇，喜欢晒太阳",
+    "width": 96,
+    "height": 96,
+    "src": "./assets/pets/forest.png"
+  },
+  {
+    "id": "nebula",
+    "species": 1,
+    "name": "团团",
+    "title": "星云小兽",
+    "silhouette": "月牙额纹、小翼、星星尾巴",
+    "personality": "慢悠悠，爱做梦，喜欢看星星",
+    "width": 96,
+    "height": 96,
+    "src": "./assets/pets/nebula.png"
+  },
+  {
+    "id": "sunshine",
+    "species": 2,
+    "name": "小麦",
+    "title": "阳光小兽",
+    "silhouette": "太阳鬃毛、短角、卷卷尾",
+    "personality": "开朗，勇敢，喜欢玩球",
+    "width": 96,
+    "height": 96,
+    "src": "./assets/pets/sunshine.png"
+  }
+]

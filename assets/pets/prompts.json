@@ -1,0 +1,20 @@
+{
+  "version": "0.3.0",
+  "date": "2026-11-05",
+  "mode": "built-in image_gen",
+  "transparent_background": true,
+  "assets": [
+    {
+      "id": "forest",
+      "prompt": "Use case: stylized-concept. Asset type: original pixel-art sprite for a 7-year-old child's handheld electronic pet, ESP32-C3 240x280 screen. Generate ONE full-body front-facing baby monster, centered on genuine transparent alpha, square canvas. Polished 2D Japanese virtual-pet game pixel art, chunky clearly defined pixels, restricted 16-color palette, dark desaturated 2-pixel outline, simple large shapes and expressive eyes, tiny paws, friendly smile, charming and slightly mischievous, not a generic rabbit. The silhouette fits inside the central 80% with generous empty transparent margins, complete feet and appendages. Face located in upper-middle of body. Must read beautifully downsampled to 96x96 pixels. One character only, no text, letters, labels, symbols outside body, scenery, frame, props or ground shadow. Original creature, no existing branded characters. Forest baby monster Yaya: a pear-shaped mint-green little woodland dinosaur with two broad leaf-shaped ears, a small sprout on top, cream belly, two dark green chevron markings on cheeks, a short visible curled leaf tail. Big dark eyes with white glints. Compact little legs. Organic leaf silhouette, distinctly green."
+    },
+    {
+      "id": "nebula",
+      "prompt": "Use case: stylized-concept. Asset type: original pixel-art sprite for a 7-year-old child's handheld electronic pet, ESP32-C3 240x280 screen. Generate ONE full-body front-facing baby monster, centered on genuine transparent alpha, square canvas. Polished 2D Japanese virtual-pet game pixel art, chunky clearly defined pixels, restricted 16-color palette, dark desaturated 2-pixel outline, simple large shapes and expressive eyes, tiny paws, friendly smile, charming and slightly mischievous, not a generic rabbit. The silhouette fits inside the central 80% with generous empty transparent margins, complete feet and appendages. Face located in upper-middle of body. Must read beautifully downsampled to 96x96 pixels. One character only, no text, letters, labels, symbols outside body, scenery, frame, props or ground shadow. Original creature, no existing branded characters. Nebula baby monster Tuantuan: a round lavender tiny celestial dragon, low crescent-shaped two ear fins, one short swept-back horn, a cream crescent marking on its forehead, dark indigo tiny bat-like side fins and a curled comet-tail ending in a small bright golden star. Large dark eyes with glints. Plump round body, pale lavender belly. Distinctively round celestial silhouette, not leaf ears."
+    },
+    {
+      "id": "sunshine",
+      "prompt": "Use case: stylized-concept. Asset type: original pixel-art sprite for a 7-year-old child's handheld electronic pet, ESP32-C3 240x280 screen. Generate ONE full-body front-facing baby monster, centered on genuine transparent alpha, square canvas. Polished 2D Japanese virtual-pet game pixel art, chunky clearly defined pixels, restricted 16-color palette, dark desaturated 2-pixel outline, simple large shapes and expressive eyes, tiny paws, friendly smile, charming and slightly mischievous, not a generic rabbit. The silhouette fits inside the central 80% with generous empty transparent margins, complete feet and appendages. Face located in upper-middle of body. Must read beautifully downsampled to 96x96 pixels. One character only, no text, letters, labels, symbols outside body, scenery, frame, props or ground shadow. Original creature, no existing branded characters. Sunshine baby monster Xiaomai: a squat honey-gold little lion-dragon, orange scalloped sun-ray mane framing its face, two stubby cream horns, small triangular orange ears, cream muzzle and belly, sturdy tiny feet and upward curl orange-tufted tail. Large dark eyes with glints, tiny friendly visible fang. Wide sunny silhouette, not rabbit ears, not leaf or star motifs."
+    }
+  ]
+}

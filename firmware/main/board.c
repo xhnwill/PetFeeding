@@ -4,6 +4,7 @@
 #include "esp_adc/adc_oneshot.h"
 #include "esp_sleep.h"
 #include "font.h"
+#include "pet_art.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -162,6 +163,18 @@ static void text(int x, int y, const char *s, uint16_t color) {
     x += c < 128 ? 9 : 16;
   }
 }
+static void sprite(unsigned species,int x,int y,int size) {
+  const uint8_t *data=pet_art_pixels[species%3];
+  const uint16_t *palette=pet_art_palettes[species%3];
+  int top=y>strip_y?y:strip_y, bottom=y+size<strip_y+20?y+size:strip_y+20;
+  for(int row=top;row<bottom;row++) {
+    int sy=(row-y)*PET_ART_SIZE/size;
+    for(int col=0;col<size;col++) {
+      unsigned index=data[sy*PET_ART_SIZE+col*PET_ART_SIZE/size];
+      if(index)rect(x+col,row,1,1,palette[index]);
+    }
+  }
+}
 void board_render(int selection, int phase, const char *note,
                   const char *detail) {
   uint16_t ink = rgb(44, 60, 66), white = rgb(255, 255, 255);
@@ -173,35 +186,14 @@ void board_render(int selection, int phase, const char *note,
              (long long)((pet.last - pet.born) / PET_DAY));
     text(12, 32, info, ink);
     ellipse(120, 177, 60, 9, rgb(216, 223, 208));
-    int bob = pet.sleeping ? 0 : (phase % 8 < 4 ? 0 : 3), y = 128 + bob,
-        rx = 33 + pet.stage * 3;
-    const int colors[4][3] = {
-        {139, 181, 163}, {228, 162, 137}, {167, 159, 205}, {222, 190, 110}};
-    const int *col = colors[pet.genes[3] % 4];
-    uint16_t body = rgb(col[0], col[1], col[2]);
-    int species = pet.genes[2] % 3;
-    ellipse(120 - rx + 7, y - 37, 12, species == 0 ? 26 : 14, body);
-    ellipse(120 + rx - 7, y - 37, 12, species == 0 ? 26 : 14, body);
-    ellipse(120, y, rx, 40, body);
-    ellipse(120, y + 13, 22, 23, rgb(247, 232, 203));
-    if (pet.gifts) {
-      const int *fc = colors[pet.friend_color % 4];
-      uint16_t friend_body = rgb(fc[0], fc[1], fc[2]);
-      ellipse(190, 145, 17, 23, friend_body);
-      ellipse(184, 126, 5, 10, friend_body);
-      ellipse(196, 126, 5, 10, friend_body);
-      rect(185, 140, 2, 3, ink);
-      rect(194, 140, 2, 3, ink);
-    }
-    if (pet.sleeping) {
-      rect(101, y - 8, 10, 3, ink);
-      rect(130, y - 8, 10, 3, ink);
-      text(164, 78, "Zzz", ink);
-    } else {
-      ellipse(106, y - 6, 4, 6, ink);
-      ellipse(134, y - 6, 4, 6, ink);
-      rect(118, y + 5, 5, 2, ink);
-    }
+    const int colors[4][3]={{139,181,163},{228,162,137},{167,159,205},{222,190,110}};
+    const int *col=colors[pet.genes[3]%4];
+    uint16_t body=rgb(col[0],col[1],col[2]);
+    int bob=pet.sleeping?0:(phase%8<4?0:3), size=96+pet.stage*6;
+    sprite(pet.genes[2]%3,120-size/2,174-size+bob,size);
+    ellipse(215,39,4,4,body);
+    if(pet.gifts)sprite(pet.friend_species%3,172,132,44);
+    if(pet.sleeping)text(170,78,"Zzz",ink);
     for (int i = 0; i < pet.poop; i++)
       ellipse(185 + i * 12, 178, 5, 5, rgb(140, 101, 70));
     int vals[] = {pet.hunger, pet.mood, pet.energy};

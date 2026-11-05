@@ -26,6 +26,10 @@ static bool authorized(httpd_req_t *r) {
                                      sizeof(token)) == ESP_OK &&
          strlen(token) == 16 && !memcmp(token, parent_token, 16);
 }
+extern const uint8_t pets_start[] asm("_binary_pets_html_start"), pets_end[] asm("_binary_pets_html_end");
+extern const uint8_t forest_start[] asm("_binary_forest_png_start"), forest_end[] asm("_binary_forest_png_end");
+extern const uint8_t nebula_start[] asm("_binary_nebula_png_start"), nebula_end[] asm("_binary_nebula_png_end");
+extern const uint8_t sunshine_start[] asm("_binary_sunshine_png_start"), sunshine_end[] asm("_binary_sunshine_png_end");
 static esp_err_t asset(httpd_req_t *r) {
   const uint8_t *s = html_start, *e = html_end;
   const char *type = "text/html; charset=utf-8";
@@ -39,10 +43,14 @@ static esp_err_t asset(httpd_req_t *r) {
     e = css_end;
     type = "text/css";
   }
+  if(!strcmp(r->uri,"/pets.html")){s=pets_start;e=pets_end;}
+  if(!strcmp(r->uri,"/assets/pets/forest.png")){s=forest_start;e=forest_end;type="image/png";}
+  if(!strcmp(r->uri,"/assets/pets/nebula.png")){s=nebula_start;e=nebula_end;type="image/png";}
+  if(!strcmp(r->uri,"/assets/pets/sunshine.png")){s=sunshine_start;e=sunshine_end;type="image/png";}
   httpd_resp_set_type(r, type);
   httpd_resp_set_hdr(r, "Cache-Control", "no-store");
   httpd_resp_set_hdr(r, "X-Content-Type-Options", "nosniff");
-  return httpd_resp_send(r, (const char *)s, e - s - 1);
+  return httpd_resp_send(r, (const char *)s, e - s - (!strcmp(type,"image/png")?0:1));
 }
 static esp_err_t state_get(httpd_req_t *r) {
   if (!authorized(r))
@@ -78,11 +86,12 @@ static void start_server(void) {
   if (server)
     return;
   httpd_config_t cfg = HTTPD_DEFAULT_CONFIG();
+  cfg.max_uri_handlers=12;
   cfg.stack_size = 6144;
   if (httpd_start(&server, &cfg) != ESP_OK)
     return;
-  const char *paths[] = {"/", "/app.js", "/style.css"};
-  for (int i = 0; i < 3; i++) {
+  const char *paths[] = {"/", "/app.js", "/style.css","/pets.html","/assets/pets/forest.png","/assets/pets/nebula.png","/assets/pets/sunshine.png"};
+  for (int i = 0; i < 7; i++) {
     httpd_uri_t u = {.uri = paths[i], .method = HTTP_GET, .handler = asset};
     httpd_register_uri_handler(server, &u);
   }

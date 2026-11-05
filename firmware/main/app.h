@@ -3,8 +3,8 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "pet.h"
-#define APP_VERSION "0.2.0"
-#define APP_BUILD_DATE "2026-10-29"
+#define APP_VERSION "0.3.0"
+#define APP_BUILD_DATE "2026-11-05"
 typedef struct {
   char json[512];
   bool parent;
